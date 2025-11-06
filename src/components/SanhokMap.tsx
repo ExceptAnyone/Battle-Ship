@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Vec2, JumpPoint } from "@/lib/jumpCalculator";
-
-const SANHOK_MAP_URL = "https://i.namu.wiki/i/8ikvu_IDLuozseiLYRIHufjZeS5JCZO_uVd63Yy3HfyTBgPd_MIdWUVxJCf4qGED3GI1OtNmYQO1LHWHsdfB5w.webp";
+import sanhokMap from "@/assets/sanhok-map.webp";
 
 interface SanhokMapProps {
   planeStart: Vec2 | null;
@@ -60,8 +59,7 @@ export function SanhokMap({
   // Load map image
   useEffect(() => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = SANHOK_MAP_URL;
+    img.src = sanhokMap;
     img.onload = () => {
       imageRef.current = img;
       draw();
