@@ -31,7 +31,30 @@ export function SanhokMap({
   const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
+  const [dragStartTime, setDragStartTime] = useState(0);
   const imageRef = useRef<HTMLImageElement | null>(null);
+
+  // Initialize zoom and pan to fit map in viewport
+  useEffect(() => {
+    const container = canvasRef.current?.parentElement;
+    if (container) {
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // Calculate zoom to fit map in container with some padding
+      const zoomX = (containerWidth * 0.95) / MAP_SIZE;
+      const zoomY = (containerHeight * 0.95) / MAP_SIZE;
+      const fitZoom = Math.min(zoomX, zoomY);
+      
+      setZoom(fitZoom);
+      
+      // Center the map
+      setPan({
+        x: (containerWidth - MAP_SIZE * fitZoom) / 2,
+        y: (containerHeight - MAP_SIZE * fitZoom) / 2,
+      });
+    }
+  }, [canvasSize]);
 
   // Load map image
   useEffect(() => {
@@ -181,7 +204,9 @@ export function SanhokMap({
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging) return;
+    // Ignore clicks that are actually drags
+    const timeSinceMouseDown = Date.now() - dragStartTime;
+    if (timeSinceMouseDown > 200) return;
     
     const pos = screenToMap(e.clientX, e.clientY);
 
@@ -195,6 +220,7 @@ export function SanhokMap({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setDragStartTime(Date.now());
     setIsDragging(true);
     setLastMouse({ x: e.clientX, y: e.clientY });
   };
@@ -259,22 +285,33 @@ export function SanhokMap({
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
         <button
           onClick={() => setZoom((z) => Math.min(3, z * 1.2))}
-          className="bg-card/95 border border-border p-2 rounded hover:bg-accent"
+          className="bg-card/95 border border-border w-10 h-10 rounded hover:bg-accent flex items-center justify-center"
         >
           <span className="text-xl font-bold">+</span>
         </button>
         <button
-          onClick={() => setZoom((z) => Math.max(0.5, z / 1.2))}
-          className="bg-card/95 border border-border p-2 rounded hover:bg-accent"
+          onClick={() => setZoom((z) => Math.max(0.1, z / 1.2))}
+          className="bg-card/95 border border-border w-10 h-10 rounded hover:bg-accent flex items-center justify-center"
         >
           <span className="text-xl font-bold">−</span>
         </button>
         <button
           onClick={() => {
-            setZoom(1);
-            setPan({ x: 0, y: 0 });
+            const container = canvasRef.current?.parentElement;
+            if (container) {
+              const containerWidth = container.clientWidth;
+              const containerHeight = container.clientHeight;
+              const zoomX = (containerWidth * 0.95) / MAP_SIZE;
+              const zoomY = (containerHeight * 0.95) / MAP_SIZE;
+              const fitZoom = Math.min(zoomX, zoomY);
+              setZoom(fitZoom);
+              setPan({
+                x: (containerWidth - MAP_SIZE * fitZoom) / 2,
+                y: (containerHeight - MAP_SIZE * fitZoom) / 2,
+              });
+            }
           }}
-          className="bg-card/95 border border-border p-2 rounded hover:bg-accent text-xs"
+          className="bg-card/95 border border-border px-2 py-2 rounded hover:bg-accent text-xs font-medium"
         >
           Reset
         </button>
