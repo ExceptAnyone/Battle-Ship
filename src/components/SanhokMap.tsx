@@ -349,19 +349,14 @@ export function SanhokMap({
       />
 
       {/* Instruction overlay */}
-      {!planeStart && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 border border-border px-6 py-3 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">클릭하여 비행기 시작 지점 설정</p>
-        </div>
-      )}
-      {planeStart && !planeEnd && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 border border-border px-6 py-3 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">클릭하여 비행기 종료 지점 설정</p>
+      {(!planeStart || (planeStart && !planeEnd)) && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 border border-border px-20 py-3 rounded-lg shadow-lg z-10">
+          <p className="text-lg font-medium">비행기 경로를 선택해주세요.</p>
         </div>
       )}
       {planeStart && planeEnd && !target && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 border border-border px-6 py-3 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">클릭하여 목표 착지 지점 설정</p>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/95 border border-border px-20 py-3 rounded-lg shadow-lg z-10">
+          <p className="text-lg font-medium">도착지점을 선택해주세요.</p>
         </div>
       )}
 
