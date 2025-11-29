@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { SanhokMap } from "@/components/SanhokMap";
-import { ControlPanel } from "@/components/ControlPanel";
-import { Vec2, calcJumpPoints, JumpPoint } from "@/lib/jumpCalculator";
+import { useState, useEffect } from 'react';
+import { SanhokMap } from '@/components/SanhokMap';
+import { ControlPanel } from '@/components/ControlPanel';
+import { Vec2, calcJumpPoints, JumpPoint } from '@/lib/jumpCalculator';
 
 const Index = () => {
   const [planeStart, setPlaneStart] = useState<Vec2 | null>(null);
@@ -40,9 +40,10 @@ const Index = () => {
           onPlaneEndSet={setPlaneEnd}
           onTargetSet={setTarget}
           jumpPoints={jumpPoints}
+          onReset={handleReset}
         />
       </div>
-      <ControlPanel
+      {/* <ControlPanel
         planeStart={planeStart}
         planeEnd={planeEnd}
         target={target}
@@ -53,7 +54,7 @@ const Index = () => {
         onPlaneSpeedChange={setPlaneSpeed}
         onTargetSet={setTarget}
         onReset={handleReset}
-      />
+      /> */}
     </div>
   );
 };

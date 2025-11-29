@@ -1,6 +1,6 @@
-import { useRef, useEffect, useState } from "react";
-import { Vec2, JumpPoint } from "@/lib/jumpCalculator";
-import sanhokMap from "@/assets/sanhok-map.webp";
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { Vec2, JumpPoint } from '@/lib/jumpCalculator';
+import sanhokMap from '@/assets/sanhok-map.webp';
 
 interface SanhokMapProps {
   planeStart: Vec2 | null;
@@ -11,6 +11,7 @@ interface SanhokMapProps {
   onPlaneEndSet: (pos: Vec2) => void;
   onTargetSet: (pos: Vec2) => void;
   jumpPoints: JumpPoint[];
+  onReset: () => void;
 }
 
 const MAP_SIZE = 4000; // Map is 4000x4000 meters
@@ -24,6 +25,7 @@ export function SanhokMap({
   onPlaneEndSet,
   onTargetSet,
   jumpPoints,
+  onReset,
 }: SanhokMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 800 });
@@ -33,64 +35,111 @@ export function SanhokMap({
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
   const [dragStartTime, setDragStartTime] = useState(0);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
-  // Initialize zoom and pan to fit map in viewport
-  useEffect(() => {
-    const container = canvasRef.current?.parentElement;
-    if (container) {
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-      
-      // Calculate zoom to fit map in container with some padding
-      const zoomX = (containerWidth * 0.95) / MAP_SIZE;
-      const zoomY = (containerHeight * 0.95) / MAP_SIZE;
-      const fitZoom = Math.min(zoomX, zoomY);
-      
-      setZoom(fitZoom);
-      
-      // Center the map
-      setPan({
-        x: (containerWidth - MAP_SIZE * fitZoom) / 2,
-        y: (containerHeight - MAP_SIZE * fitZoom) / 2,
-      });
-    }
-  }, [canvasSize]);
-
-  // Load map image
+  // Load map image and calculate initial zoom/pan
   useEffect(() => {
     const img = new Image();
     img.src = sanhokMap;
     img.onload = () => {
       imageRef.current = img;
-      draw();
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+      setImageSize({ width: imgWidth, height: imgHeight });
+
+      // Initialize zoom and pan to fit map in viewport
+      const container = canvasRef.current?.parentElement;
+      if (container) {
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+
+        // Calculate zoom to fit image in container with some padding
+        const zoomX = (containerWidth * 0.95) / imgWidth;
+        const zoomY = (containerHeight * 0.95) / imgHeight;
+        const fitZoom = Math.min(zoomX, zoomY);
+
+        setZoom(fitZoom);
+
+        // Center the map
+        setPan({
+          x: (containerWidth - imgWidth * fitZoom) / 2,
+          y: (containerHeight - imgHeight * fitZoom) / 2,
+        });
+      }
     };
   }, []);
+
+  // Update zoom and pan when container size changes (only if image is loaded)
+  useEffect(() => {
+    if (!imageRef.current || imageSize.width === 0 || imageSize.height === 0)
+      return;
+
+    const container = canvasRef.current?.parentElement;
+    if (container) {
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      // Calculate zoom to fit image in container with some padding
+      const zoomX = (containerWidth * 0.95) / imageSize.width;
+      const zoomY = (containerHeight * 0.95) / imageSize.height;
+      const fitZoom = Math.min(zoomX, zoomY);
+
+      setZoom(fitZoom);
+
+      // Center the map
+      setPan({
+        x: (containerWidth - imageSize.width * fitZoom) / 2,
+        y: (containerHeight - imageSize.height * fitZoom) / 2,
+      });
+    }
+  }, [canvasSize, imageSize]);
 
   // Convert screen coordinates to map coordinates
   const screenToMap = (screenX: number, screenY: number): Vec2 => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
+    if (!rect || !imageRef.current) return { x: 0, y: 0 };
 
-    const x = (screenX - rect.left - pan.x) / zoom;
-    const y = (screenY - rect.top - pan.y) / zoom;
+    const imgWidth = imageRef.current.naturalWidth;
+    const imgHeight = imageRef.current.naturalHeight;
 
-    return {
-      x: Math.max(0, Math.min(MAP_SIZE, x)),
-      y: Math.max(0, Math.min(MAP_SIZE, MAP_SIZE - y)),
-    };
+    // Convert screen position to image pixel position
+    const imgX = (screenX - rect.left - pan.x) / zoom;
+    const imgY = (screenY - rect.top - pan.y) / zoom;
+
+    // Convert image pixel position to map coordinates (0-4000 range)
+    const mapX = Math.max(0, Math.min(MAP_SIZE, (imgX / imgWidth) * MAP_SIZE));
+    const mapY = Math.max(
+      0,
+      Math.min(MAP_SIZE, MAP_SIZE - (imgY / imgHeight) * MAP_SIZE)
+    );
+
+    return { x: mapX, y: mapY };
   };
 
   // Convert map coordinates to screen coordinates
-  const mapToScreen = (mapPos: Vec2): { x: number; y: number } => {
-    return {
-      x: mapPos.x * zoom + pan.x,
-      y: (MAP_SIZE - mapPos.y) * zoom + pan.y,
-    };
-  };
+  const mapToScreen = useCallback(
+    (mapPos: Vec2): { x: number; y: number } => {
+      if (!imageRef.current) return { x: 0, y: 0 };
 
-  const draw = () => {
+      const imgWidth = imageRef.current.naturalWidth;
+      const imgHeight = imageRef.current.naturalHeight;
+
+      // Convert map coordinates (0-4000) to image pixel coordinates
+      const imgX = (mapPos.x / MAP_SIZE) * imgWidth;
+      const imgY = ((MAP_SIZE - mapPos.y) / MAP_SIZE) * imgHeight;
+
+      // Convert image pixel coordinates to screen coordinates
+      return {
+        x: imgX * zoom + pan.x,
+        y: imgY * zoom + pan.y,
+      };
+    },
+    [zoom, pan]
+  );
+
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -99,12 +148,14 @@ export function SanhokMap({
 
     // Draw map image
     if (imageRef.current) {
+      const imgWidth = imageRef.current.naturalWidth;
+      const imgHeight = imageRef.current.naturalHeight;
       ctx.drawImage(
         imageRef.current,
         pan.x,
         pan.y,
-        MAP_SIZE * zoom,
-        MAP_SIZE * zoom
+        imgWidth * zoom,
+        imgHeight * zoom
       );
     }
 
@@ -113,7 +164,7 @@ export function SanhokMap({
       const start = mapToScreen(planeStart);
       const end = mapToScreen(planeEnd);
 
-      ctx.strokeStyle = "#3b82f6";
+      ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 3;
       ctx.setLineDash([10, 10]);
       ctx.beginPath();
@@ -128,44 +179,59 @@ export function SanhokMap({
       const targetScreen = mapToScreen(target);
 
       // Draw radius circle
-      ctx.strokeStyle = "#ef4444";
-      ctx.fillStyle = "rgba(239, 68, 68, 0.1)";
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(targetScreen.x, targetScreen.y, jumpDistance * zoom, 0, Math.PI * 2);
+      ctx.arc(
+        targetScreen.x,
+        targetScreen.y,
+        jumpDistance * zoom,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.stroke();
 
       // Draw target marker
-      drawMarker(ctx, targetScreen.x, targetScreen.y, "#ef4444", 8);
+      drawMarker(ctx, targetScreen.x, targetScreen.y, '#ef4444', 8);
     }
 
     // Draw plane start/end markers
     if (planeStart) {
       const start = mapToScreen(planeStart);
-      drawMarker(ctx, start.x, start.y, "#3b82f6", 8);
+      drawMarker(ctx, start.x, start.y, '#3b82f6', 8);
     }
     if (planeEnd) {
       const end = mapToScreen(planeEnd);
-      drawMarker(ctx, end.x, end.y, "#3b82f6", 8);
+      drawMarker(ctx, end.x, end.y, '#3b82f6', 8);
     }
 
     // Draw jump points
     jumpPoints.forEach((jp) => {
       const pos = mapToScreen(jp.position);
-      drawMarker(ctx, pos.x, pos.y, "#f97316", jp.isRecommended ? 12 : 8);
-      
+      drawMarker(ctx, pos.x, pos.y, '#f97316', jp.isRecommended ? 12 : 8);
+
       if (jp.isRecommended) {
         // Draw "JUMP HERE" label
-        ctx.fillStyle = "#f97316";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("JUMP HERE", pos.x, pos.y - 20);
+        ctx.fillStyle = '#f97316';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('JUMP HERE', pos.x, pos.y - 20);
       }
     });
 
     ctx.restore();
-  };
+  }, [
+    planeStart,
+    planeEnd,
+    target,
+    jumpDistance,
+    jumpPoints,
+    pan,
+    zoom,
+    mapToScreen,
+  ]);
 
   const drawMarker = (
     ctx: CanvasRenderingContext2D,
@@ -175,7 +241,7 @@ export function SanhokMap({
     size: number
   ) => {
     ctx.fillStyle = color;
-    ctx.strokeStyle = "white";
+    ctx.strokeStyle = 'white';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -184,8 +250,20 @@ export function SanhokMap({
   };
 
   useEffect(() => {
-    draw();
-  }, [planeStart, planeEnd, target, jumpDistance, jumpPoints, pan, zoom]);
+    if (imageRef.current) {
+      draw();
+    }
+  }, [
+    planeStart,
+    planeEnd,
+    target,
+    jumpDistance,
+    jumpPoints,
+    pan,
+    zoom,
+    draw,
+    imageSize,
+  ]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -199,15 +277,15 @@ export function SanhokMap({
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     // Ignore clicks that are actually drags
     const timeSinceMouseDown = Date.now() - dragStartTime;
     if (timeSinceMouseDown > 200) return;
-    
+
     const pos = screenToMap(e.clientX, e.clientY);
 
     if (!planeStart) {
@@ -298,18 +376,21 @@ export function SanhokMap({
         <button
           onClick={() => {
             const container = canvasRef.current?.parentElement;
-            if (container) {
+            if (container && imageRef.current) {
               const containerWidth = container.clientWidth;
               const containerHeight = container.clientHeight;
-              const zoomX = (containerWidth * 0.95) / MAP_SIZE;
-              const zoomY = (containerHeight * 0.95) / MAP_SIZE;
+              const imgWidth = imageRef.current.naturalWidth;
+              const imgHeight = imageRef.current.naturalHeight;
+              const zoomX = (containerWidth * 0.95) / imgWidth;
+              const zoomY = (containerHeight * 0.95) / imgHeight;
               const fitZoom = Math.min(zoomX, zoomY);
               setZoom(fitZoom);
               setPan({
-                x: (containerWidth - MAP_SIZE * fitZoom) / 2,
-                y: (containerHeight - MAP_SIZE * fitZoom) / 2,
+                x: (containerWidth - imgWidth * fitZoom) / 2,
+                y: (containerHeight - imgHeight * fitZoom) / 2,
               });
             }
+            onReset();
           }}
           className="bg-card/95 border border-border px-2 py-2 rounded hover:bg-accent text-xs font-medium"
         >
