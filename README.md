@@ -1,73 +1,37 @@
-# Welcome to your Lovable project
+# **Battle-Ship URL**: https://battle-ship-mu.vercel.app/
 
-## Project info
+# 사녹 점프 계산기 | PUBG 배틀그라운드
 
-**URL**: https://lovable.dev/projects/90cc389c-5188-4587-aa0e-3a4a9bad198f
+배틀그라운드 사녹 맵에서 비행기 경로에 따라 최적의 점프 지점을 계산해주는 전술 도구입니다.
 
-## How can I edit this code?
+## 📋 서비스 소개
 
-There are several ways of editing your application.
+이 도구는 PUBG 배틀그라운드의 사녹 맵에서 비행기 경로와 목표 착지 지점을 설정하면, 파라슈트로 이동 가능한 거리 내에서 최적의 점프 타이밍을 계산하여 표시합니다. 게임 내에서 더 정확하게 원하는 위치에 착지할 수 있도록 도와줍니다.
 
-**Use Lovable**
+## 🎮 서비스 이용법
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/90cc389c-5188-4587-aa0e-3a4a9bad198f) and start prompting.
+### 1단계: 비행기 경로 선택
 
-Changes made via Lovable will be committed automatically to this repo.
+- 맵을 클릭하여 **비행기 시작 지점**을 설정합니다.
+- 다시 클릭하여 **비행기 종료 지점**을 설정합니다.
 
-**Use your preferred IDE**
+### 2단계: 목표 착지 지점 선택
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- 비행기 경로가 설정되면, 원하는 **목표 착지 지점**을 클릭합니다.
+- 목표 지점 주위에 빨간 원이 표시되며, 이 원은 파라슈트로 이동 가능한 범위를 나타냅니다.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 3단계: 점프 지점 확인
 
-Follow these steps:
+- 계산된 점프 지점이 오렌지색 마커로 표시됩니다.
+- **"JUMP HERE"** 라벨이 표시된 지점이 추천 점프 지점입니다.
+- 이 지점에서 낙하하면 목표 지점에 정확히 도착할 수 있습니다.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 맵 조작 기능
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **드래그**: 맵을 클릭하고 드래그하여 이동할 수 있습니다.
+- **줌**: 마우스 휠을 사용하거나 우측 하단의 +/- 버튼으로 확대/축소할 수 있습니다.
+- **초기화**: 우측 하단의 "Reset" 버튼을 클릭하면 모든 설정이 초기화됩니다.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 프로젝트 정보
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/90cc389c-5188-4587-aa0e-3a4a9bad198f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Battle-Ship URL**: https://battle-ship-mu.vercel.app/
