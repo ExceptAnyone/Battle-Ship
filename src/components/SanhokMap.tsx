@@ -174,9 +174,15 @@ export function SanhokMap({
       ctx.setLineDash([]);
     }
 
-    // Draw target and radius
     if (target) {
       const targetScreen = mapToScreen(target);
+
+      let radiusInScreenPixels = 0;
+      if (imageRef.current) {
+        const imgWidth = imageRef.current.naturalWidth;
+
+        radiusInScreenPixels = (jumpDistance / MAP_SIZE) * imgWidth * zoom;
+      }
 
       // Draw radius circle
       ctx.strokeStyle = '#ef4444';
@@ -186,7 +192,7 @@ export function SanhokMap({
       ctx.arc(
         targetScreen.x,
         targetScreen.y,
-        jumpDistance * zoom,
+        radiusInScreenPixels,
         0,
         Math.PI * 2
       );
