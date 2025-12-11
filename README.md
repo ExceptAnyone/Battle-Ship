@@ -1,6 +1,6 @@
 # **Battle-Ship URL**: https://battle-ship-mu.vercel.app/
 
-# 사녹 점프 계산기 | PUBG 배틀그라운드
+# 배틀그라운드 낙하산 점프 계산기 | PUBG 배틀그라운드
 
 배틀그라운드 사녹 맵에서 비행기 경로에 따라 최적의 점프 지점을 계산해주는 전술 도구입니다.
 
