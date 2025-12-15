@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { SanhokMap } from '@/components/SanhokMap';
-import { ControlPanel } from '@/components/ControlPanel';
-import { Vec2, calcJumpPoints, JumpPoint } from '@/lib/jumpCalculator';
+import { useState, useEffect } from "react";
+import { SanhokMap } from "@/components/SanhokMap";
+import { Vec2, calcJumpPoints, JumpPoint } from "@/lib/jumpCalculator";
 
 const Index = () => {
   const [planeStart, setPlaneStart] = useState<Vec2 | null>(null);

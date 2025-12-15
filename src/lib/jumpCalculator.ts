@@ -99,13 +99,3 @@ export function calcTimeToJump(distance: number, planeSpeed: number): number {
 /**
  * Common hotspot locations on Sanhok map (4000x4000 coordinate system)
  */
-export const HOTSPOTS = [
-  { name: "Bootcamp", position: { x: 2200, y: 2400 } },
-  { name: "Paradise Resort", position: { x: 3200, y: 2800 } },
-  { name: "Ruins", position: { x: 1800, y: 1600 } },
-  { name: "Cave", position: { x: 1200, y: 2600 } },
-  { name: "Quarry", position: { x: 2800, y: 1200 } },
-  { name: "Pai Nan", position: { x: 800, y: 3200 } },
-  { name: "Ha Tinh", position: { x: 2400, y: 3400 } },
-  { name: "Docks", position: { x: 3600, y: 1800 } },
-] as const;
