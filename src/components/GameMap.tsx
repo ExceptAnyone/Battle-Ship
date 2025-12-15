@@ -1,9 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Vec2, JumpPoint } from "@/lib/jumpCalculator";
-import sanhokMap from "@/assets/sanhok-map.webp";
 import { useMapCoordinates } from "@/hooks/useMapCoordinates";
 import {
-  MAP_SIZE,
   MAP_PADDING_RATIO,
   MIN_ZOOM,
   MAX_ZOOM,
@@ -23,10 +21,10 @@ import {
   MARKER_SIZE_RECOMMENDED,
   JUMP_LABEL_OFFSET,
 } from "@/constants/mapConfig";
-import { usePlaneRoute } from "@/hooks/usePlaneRoute";
-import { useJumpCalculation } from "@/hooks/useJumpCalculation";
 
-interface SanhokMapProps {
+interface GameMapProps {
+  mapImage: string;
+  mapSize: number;
   planeStart: Vec2 | null;
   planeEnd: Vec2 | null;
   target: Vec2 | null;
@@ -38,23 +36,19 @@ interface SanhokMapProps {
   onReset: () => void;
 }
 
-export function SanhokMap() {
-  const {
-    planeStart,
-    planeEnd,
-    target,
-    setPlaneStart,
-    setPlaneEnd,
-    setTarget,
-    reset,
-  } = usePlaneRoute();
-
-  const { jumpDistance, jumpPoints } = useJumpCalculation({
-    planeStart,
-    planeEnd,
-    target,
-  });
-
+export function GameMap({
+  mapImage,
+  mapSize,
+  planeStart,
+  planeEnd,
+  target,
+  jumpDistance,
+  onPlaneStartSet,
+  onPlaneEndSet,
+  onTargetSet,
+  jumpPoints,
+  onReset,
+}: GameMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 800 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -71,6 +65,7 @@ export function SanhokMap() {
     canvasRef,
     zoom,
     pan,
+    mapSize,
   });
 
   // Calculate zoom level to fit image in container
@@ -106,7 +101,7 @@ export function SanhokMap() {
   // Load map image and calculate initial zoom/pan
   useEffect(() => {
     const img = new Image();
-    img.src = sanhokMap;
+    img.src = mapImage;
     img.onload = () => {
       imageRef.current = img;
       const imgWidth = img.naturalWidth;
@@ -116,8 +111,9 @@ export function SanhokMap() {
       // Initialize zoom and pan to fit map in viewport
       const container = canvasRef.current?.parentElement;
       if (container) {
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
+        // Ensure we have the correct container size
+        const containerWidth = container.clientWidth || canvasSize.width;
+        const containerHeight = container.clientHeight || canvasSize.height;
 
         const fitZoom = calculateFitZoom(
           containerWidth,
@@ -137,7 +133,7 @@ export function SanhokMap() {
         setPan(centerPan);
       }
     };
-  }, [calculateFitZoom, calculateCenterPan]);
+  }, [mapImage, calculateFitZoom, calculateCenterPan, canvasSize]);
 
   // Update zoom and pan when container size changes (only if image is loaded)
   useEffect(() => {
@@ -227,7 +223,7 @@ export function SanhokMap() {
 
       const targetScreen = mapToScreen(target);
       const imgWidth = imageRef.current.naturalWidth;
-      const radiusInScreenPixels = (jumpDistance / MAP_SIZE) * imgWidth * zoom;
+      const radiusInScreenPixels = (jumpDistance / mapSize) * imgWidth * zoom;
 
       // Draw radius circle
       ctx.strokeStyle = TARGET_CIRCLE_COLOR;
@@ -253,7 +249,7 @@ export function SanhokMap() {
         MARKER_SIZE_DEFAULT
       );
     },
-    [target, jumpDistance, zoom, mapToScreen]
+    [target, jumpDistance, zoom, mapSize, mapToScreen]
   );
 
   const drawPlaneMarkers = useCallback(
@@ -327,17 +323,7 @@ export function SanhokMap() {
     if (imageRef.current) {
       draw();
     }
-  }, [
-    planeStart,
-    planeEnd,
-    target,
-    jumpDistance,
-    jumpPoints,
-    pan,
-    zoom,
-    draw,
-    imageSize,
-  ]);
+  }, [draw, imageSize]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -371,11 +357,11 @@ export function SanhokMap() {
     const isSelectingTarget = planeStart && planeEnd;
 
     if (isSelectingPlaneStart) {
-      setPlaneStart(pos);
+      onPlaneStartSet(pos);
     } else if (isSelectingPlaneEnd) {
-      setPlaneEnd(pos);
+      onPlaneEndSet(pos);
     } else if (isSelectingTarget) {
-      setTarget(pos);
+      onTargetSet(pos);
     }
   };
 
@@ -405,8 +391,8 @@ export function SanhokMap() {
     );
     setPan(centerPan);
 
-    reset();
-  }, [calculateFitZoom, calculateCenterPan, reset]);
+    onReset();
+  }, [calculateFitZoom, calculateCenterPan, onReset]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setDragStartTime(Date.now());

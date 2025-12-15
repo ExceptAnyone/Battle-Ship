@@ -1,10 +1,69 @@
-import { SanhokMap } from "@/components/SanhokMap";
+import { useState } from "react";
+import { GameMap } from "@/components/GameMap";
+import { MapSelector } from "@/components/MapSelector";
+import { useMapSelection } from "@/hooks/useMapSelection";
+import { usePlaneRoute } from "@/hooks/usePlaneRoute";
+import { useJumpCalculation } from "@/hooks/useJumpCalculation";
 
 const Index = () => {
+  const [showMapSelector, setShowMapSelector] = useState(false);
+  const { selectedMap, selectMap } = useMapSelection();
+  const {
+    planeStart,
+    planeEnd,
+    target,
+    setPlaneStart,
+    setPlaneEnd,
+    setTarget,
+    reset,
+  } = usePlaneRoute();
+
+  const { jumpDistance, jumpPoints } = useJumpCalculation({
+    planeStart,
+    planeEnd,
+    target,
+  });
+
   return (
-    <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-background">
-      <div className="flex-1 relative">
-        <SanhokMap />
+    <div className="flex items-center justify-center h-screen w-screen overflow-hidden bg-background">
+      {/* Map selector toggle button */}
+      <button
+        onClick={() => setShowMapSelector(!showMapSelector)}
+        className="absolute top-4 left-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors font-medium"
+      >
+        {showMapSelector ? "맵 선택 닫기" : "맵 선택"}
+      </button>
+
+      {/* Map selector dropdown */}
+      {showMapSelector && (
+        <div className="absolute top-16 left-4 z-20 bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-4">
+          <MapSelector selectedMapId={selectedMap.id} onMapSelect={selectMap} />
+        </div>
+      )}
+
+      {/* Map container - square aspect ratio for accurate coordinate mapping */}
+      <div
+        className="relative"
+        style={{
+          width: "min(100vh, 100vw)",
+          height: "min(100vh, 100vw)",
+          maxWidth: "100vw",
+          maxHeight: "100vh",
+        }}
+      >
+        <GameMap
+          mapImage={selectedMap.image}
+          mapSize={selectedMap.size}
+          planeStart={planeStart}
+          planeEnd={planeEnd}
+          target={target}
+          jumpDistance={jumpDistance}
+          onPlaneStartSet={setPlaneStart}
+          onPlaneEndSet={setPlaneEnd}
+          onTargetSet={setTarget}
+          jumpPoints={jumpPoints}
+          onReset={reset}
+        />
       </div>
     </div>
   );

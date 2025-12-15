@@ -1,12 +1,12 @@
 import { useCallback, RefObject } from "react";
 import { Vec2 } from "@/lib/jumpCalculator";
-import { MAP_SIZE } from "@/constants/mapConfig";
 
 interface UseMapCoordinatesParams {
   imageRef: RefObject<HTMLImageElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
   zoom: number;
   pan: { x: number; y: number };
+  mapSize: number;
 }
 
 /**
@@ -17,6 +17,7 @@ export function useMapCoordinates({
   canvasRef,
   zoom,
   pan,
+  mapSize,
 }: UseMapCoordinatesParams) {
   // Convert screen coordinates to map coordinates (0-4000 range)
   const screenToMap = useCallback(
@@ -32,18 +33,15 @@ export function useMapCoordinates({
       const imgY = (screenY - rect.top - pan.y) / zoom;
 
       // Convert image pixel position to map coordinates (0-4000 range)
-      const mapX = Math.max(
-        0,
-        Math.min(MAP_SIZE, (imgX / imgWidth) * MAP_SIZE)
-      );
+      const mapX = Math.max(0, Math.min(mapSize, (imgX / imgWidth) * mapSize));
       const mapY = Math.max(
         0,
-        Math.min(MAP_SIZE, MAP_SIZE - (imgY / imgHeight) * MAP_SIZE)
+        Math.min(mapSize, mapSize - (imgY / imgHeight) * mapSize)
       );
 
       return { x: mapX, y: mapY };
     },
-    [canvasRef, imageRef, zoom, pan]
+    [canvasRef, imageRef, zoom, pan, mapSize]
   );
 
   // Convert map coordinates to screen coordinates
@@ -55,8 +53,8 @@ export function useMapCoordinates({
       const imgHeight = imageRef.current.naturalHeight;
 
       // Convert map coordinates (0-4000) to image pixel coordinates
-      const imgX = (mapPos.x / MAP_SIZE) * imgWidth;
-      const imgY = ((MAP_SIZE - mapPos.y) / MAP_SIZE) * imgHeight;
+      const imgX = (mapPos.x / mapSize) * imgWidth;
+      const imgY = ((mapSize - mapPos.y) / mapSize) * imgHeight;
 
       // Convert image pixel coordinates to screen coordinates
       return {
@@ -64,7 +62,7 @@ export function useMapCoordinates({
         y: imgY * zoom + pan.y,
       };
     },
-    [imageRef, zoom, pan]
+    [imageRef, zoom, pan, mapSize]
   );
 
   return { screenToMap, mapToScreen };
