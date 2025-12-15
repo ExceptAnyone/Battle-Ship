@@ -5,17 +5,19 @@ import erangelMapImage from "@/assets/에란겔.webp";
  * Map configuration interface
  */
 export interface MapConfig {
-  id: string;
+  id: MapNames;
   name: string;
   displayName: string;
   image: string;
   size: number; // Map size in meters (e.g., 4000x4000, 8000x8000)
 }
 
+type MapNames = "sanhok" | "erangel";
+
 /**
  * Available maps configuration
  */
-export const MAPS: Record<string, MapConfig> = {
+export const MAPS: Record<MapNames, MapConfig> = {
   sanhok: {
     id: "sanhok",
     name: "sanhok",

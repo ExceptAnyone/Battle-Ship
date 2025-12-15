@@ -5,6 +5,7 @@
 // Map dimensions
 export const MAP_SIZE = 4000; // Map is 4000x4000 meters
 export const MAP_PADDING_RATIO = 1.0; // Use full container space for accurate coordinate mapping
+export const DEFAULT_CANVAS_SIZE = 800; // Default canvas size in pixels
 
 // Zoom configuration
 export const MIN_ZOOM = 0.5;

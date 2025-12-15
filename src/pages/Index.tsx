@@ -1,12 +1,13 @@
-import { useState } from "react";
 import { GameMap } from "@/components/GameMap";
 import { MapSelector } from "@/components/MapSelector";
 import { useMapSelection } from "@/hooks/useMapSelection";
 import { usePlaneRoute } from "@/hooks/usePlaneRoute";
 import { useJumpCalculation } from "@/hooks/useJumpCalculation";
+import { useBooleanState } from "@/hooks/useBooleanState";
 
 const Index = () => {
-  const [showMapSelector, setShowMapSelector] = useState(false);
+  const { value: showMapSelector, toggle: toggleMapSelector } =
+    useBooleanState(false);
   const { selectedMap, selectMap } = useMapSelection();
   const {
     planeStart,
@@ -28,7 +29,7 @@ const Index = () => {
     <div className="flex items-center justify-center h-screen w-screen overflow-hidden bg-background">
       {/* Map selector toggle button */}
       <button
-        onClick={() => setShowMapSelector(!showMapSelector)}
+        onClick={toggleMapSelector}
         className="absolute top-4 left-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors font-medium"
       >
         {showMapSelector ? "맵 선택 닫기" : "맵 선택"}

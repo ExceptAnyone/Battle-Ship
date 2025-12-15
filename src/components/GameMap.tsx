@@ -1,13 +1,11 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { Vec2, JumpPoint } from "@/lib/jumpCalculator";
 import { useMapCoordinates } from "@/hooks/useMapCoordinates";
+import { useCanvasSize } from "@/hooks/useCanvasSize";
+import { useMapZoomPan } from "@/hooks/useMapZoomPan";
+import { useMapDrag } from "@/hooks/useMapDrag";
+import { useMapImageLoader } from "@/hooks/useMapImageLoader";
 import {
-  MAP_PADDING_RATIO,
-  MIN_ZOOM,
-  MAX_ZOOM,
-  ZOOM_WHEEL_STEP,
-  ZOOM_BUTTON_STEP,
-  DRAG_THRESHOLD_MS,
   PLANE_PATH_COLOR,
   PLANE_PATH_LINE_WIDTH,
   PLANE_PATH_DASH_PATTERN,
@@ -50,16 +48,22 @@ export function GameMap({
   onReset,
 }: GameMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 800 });
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
-  const [dragStartTime, setDragStartTime] = useState(0);
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
-  // Use custom hook for coordinate transformation
+  const canvasSize = useCanvasSize({ canvasRef });
+  const { imageRef, imageSize } = useMapImageLoader({
+    mapImage,
+    canvasRef,
+    canvasSize,
+  });
+  const { pan, setPan, zoom, resetView, zoomIn, zoomOut, handleWheel } =
+    useMapZoomPan({ canvasSize, imageSize });
+  const {
+    handleMouseDown: onMouseDown,
+    handleMouseMove: onMouseMove,
+    handleMouseUp: onMouseUp,
+    isDragGesture,
+  } = useMapDrag();
+
   const { screenToMap, mapToScreen } = useMapCoordinates({
     imageRef,
     canvasRef,
@@ -68,103 +72,6 @@ export function GameMap({
     mapSize,
   });
 
-  // Calculate zoom level to fit image in container
-  const calculateFitZoom = useCallback(
-    (
-      containerWidth: number,
-      containerHeight: number,
-      imageWidth: number,
-      imageHeight: number
-    ) => {
-      const zoomX = (containerWidth * MAP_PADDING_RATIO) / imageWidth;
-      const zoomY = (containerHeight * MAP_PADDING_RATIO) / imageHeight;
-      return Math.min(zoomX, zoomY);
-    },
-    []
-  );
-
-  // Calculate pan to center image in container
-  const calculateCenterPan = useCallback(
-    (
-      containerWidth: number,
-      containerHeight: number,
-      imageWidth: number,
-      imageHeight: number,
-      zoom: number
-    ) => ({
-      x: (containerWidth - imageWidth * zoom) / 2,
-      y: (containerHeight - imageHeight * zoom) / 2,
-    }),
-    []
-  );
-
-  // Load map image and calculate initial zoom/pan
-  useEffect(() => {
-    const img = new Image();
-    img.src = mapImage;
-    img.onload = () => {
-      imageRef.current = img;
-      const imgWidth = img.naturalWidth;
-      const imgHeight = img.naturalHeight;
-      setImageSize({ width: imgWidth, height: imgHeight });
-
-      // Initialize zoom and pan to fit map in viewport
-      const container = canvasRef.current?.parentElement;
-      if (container) {
-        // Ensure we have the correct container size
-        const containerWidth = container.clientWidth || canvasSize.width;
-        const containerHeight = container.clientHeight || canvasSize.height;
-
-        const fitZoom = calculateFitZoom(
-          containerWidth,
-          containerHeight,
-          imgWidth,
-          imgHeight
-        );
-        setZoom(fitZoom);
-
-        const centerPan = calculateCenterPan(
-          containerWidth,
-          containerHeight,
-          imgWidth,
-          imgHeight,
-          fitZoom
-        );
-        setPan(centerPan);
-      }
-    };
-  }, [mapImage, calculateFitZoom, calculateCenterPan, canvasSize]);
-
-  // Update zoom and pan when container size changes (only if image is loaded)
-  useEffect(() => {
-    if (!imageRef.current || imageSize.width === 0 || imageSize.height === 0)
-      return;
-
-    const container = canvasRef.current?.parentElement;
-    if (container) {
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-
-      const fitZoom = calculateFitZoom(
-        containerWidth,
-        containerHeight,
-        imageSize.width,
-        imageSize.height
-      );
-      setZoom(fitZoom);
-
-      const centerPan = calculateCenterPan(
-        containerWidth,
-        containerHeight,
-        imageSize.width,
-        imageSize.height,
-        fitZoom
-      );
-      setPan(centerPan);
-    }
-  }, [canvasSize, imageSize, calculateFitZoom, calculateCenterPan]);
-
-  // Drawing helper functions
   const drawMarker = (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -195,7 +102,7 @@ export function GameMap({
         imgHeight * zoom
       );
     },
-    [pan, zoom]
+    [pan, zoom, imageRef]
   );
 
   const drawPlanePath = useCallback(
@@ -249,7 +156,7 @@ export function GameMap({
         MARKER_SIZE_DEFAULT
       );
     },
-    [target, jumpDistance, zoom, mapSize, mapToScreen]
+    [target, jumpDistance, zoom, mapSize, mapToScreen, imageRef]
   );
 
   const drawPlaneMarkers = useCallback(
@@ -323,29 +230,11 @@ export function GameMap({
     if (imageRef.current) {
       draw();
     }
-  }, [draw, imageSize]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const container = canvasRef.current?.parentElement;
-      if (container) {
-        setCanvasSize({
-          width: container.clientWidth,
-          height: container.clientHeight,
-        });
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [draw, imageSize, imageRef]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     // Ignore clicks that are actually drags
-    const timeSinceMouseDown = Date.now() - dragStartTime;
-    const isDragGesture = timeSinceMouseDown > DRAG_THRESHOLD_MS;
-    if (isDragGesture) return;
+    if (isDragGesture()) return;
 
     const pos = screenToMap(e.clientX, e.clientY);
     handleMapClick(pos);
@@ -366,62 +255,25 @@ export function GameMap({
   };
 
   const resetMapView = useCallback(() => {
-    const container = canvasRef.current?.parentElement;
-    if (!container || !imageRef.current) return;
-
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    const imgWidth = imageRef.current.naturalWidth;
-    const imgHeight = imageRef.current.naturalHeight;
-
-    const fitZoom = calculateFitZoom(
-      containerWidth,
-      containerHeight,
-      imgWidth,
-      imgHeight
-    );
-    setZoom(fitZoom);
-
-    const centerPan = calculateCenterPan(
-      containerWidth,
-      containerHeight,
-      imgWidth,
-      imgHeight,
-      fitZoom
-    );
-    setPan(centerPan);
-
+    resetView();
     onReset();
-  }, [calculateFitZoom, calculateCenterPan, onReset]);
+  }, [resetView, onReset]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setDragStartTime(Date.now());
-    setIsDragging(true);
-    setLastMouse({ x: e.clientX, y: e.clientY });
+    onMouseDown(e);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
-
-    const dx = e.clientX - lastMouse.x;
-    const dy = e.clientY - lastMouse.y;
-
-    setPan((prev) => ({
-      x: prev.x + dx,
-      y: prev.y + dy,
-    }));
-
-    setLastMouse({ x: e.clientX, y: e.clientY });
+    onMouseMove(e, (dx, dy) => {
+      setPan((prev) => ({
+        x: prev.x + dx,
+        y: prev.y + dy,
+      }));
+    });
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 1 - ZOOM_WHEEL_STEP : 1 + ZOOM_WHEEL_STEP;
-    setZoom((prev) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev * delta)));
+    onMouseUp();
   };
 
   return (
@@ -454,17 +306,13 @@ export function GameMap({
       {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
         <button
-          onClick={() =>
-            setZoom((z) => Math.min(MAX_ZOOM, z * ZOOM_BUTTON_STEP))
-          }
+          onClick={zoomIn}
           className="bg-card/95 border border-border w-10 h-10 rounded hover:bg-accent flex items-center justify-center"
         >
           <span className="text-xl font-bold">+</span>
         </button>
         <button
-          onClick={() =>
-            setZoom((z) => Math.max(MIN_ZOOM, z / ZOOM_BUTTON_STEP))
-          }
+          onClick={zoomOut}
           className="bg-card/95 border border-border w-10 h-10 rounded hover:bg-accent flex items-center justify-center"
         >
           <span className="text-xl font-bold">−</span>
