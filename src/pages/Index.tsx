@@ -4,7 +4,7 @@ import { useMapSelection } from "@/hooks/useMapSelection";
 import { usePlaneRoute } from "@/hooks/usePlaneRoute";
 import { useJumpCalculation } from "@/hooks/useJumpCalculation";
 import { useBooleanState } from "@/hooks/useBooleanState";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboradShortcuts";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 const Index = () => {
   const { value: showMapSelector, toggle: toggleMapSelector } =
