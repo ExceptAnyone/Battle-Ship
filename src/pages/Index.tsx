@@ -4,6 +4,7 @@ import { useMapSelection } from "@/hooks/useMapSelection";
 import { usePlaneRoute } from "@/hooks/usePlaneRoute";
 import { useJumpCalculation } from "@/hooks/useJumpCalculation";
 import { useBooleanState } from "@/hooks/useBooleanState";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboradShortcuts";
 
 const Index = () => {
   const { value: showMapSelector, toggle: toggleMapSelector } =
@@ -25,6 +26,8 @@ const Index = () => {
     target,
   });
 
+  useKeyboardShortcuts({ r: reset });
+  
   return (
     <div className="flex items-center justify-center h-screen w-screen overflow-hidden bg-background">
       {/* Map selector toggle button */}
