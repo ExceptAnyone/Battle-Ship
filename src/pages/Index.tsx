@@ -30,7 +30,7 @@ const Index = () => {
   
   return (
     <div className="flex items-center justify-center h-screen w-screen overflow-hidden bg-background">
-      {/* Map selector toggle button */}
+      {/* 맵 선택 토글 버튼 */}
       <button
         onClick={toggleMapSelector}
         className="absolute top-4 left-4 z-20 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors font-medium"
@@ -38,14 +38,14 @@ const Index = () => {
         {showMapSelector ? "맵 선택 닫기" : "맵 선택"}
       </button>
 
-      {/* Map selector dropdown */}
+      {/* 맵 선택 드롭다운 */}
       {showMapSelector && (
         <div className="absolute top-16 left-4 z-20 bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-4">
           <MapSelector selectedMapId={selectedMap.id} onMapSelect={selectMap} />
         </div>
       )}
 
-      {/* Map container - square aspect ratio for accurate coordinate mapping */}
+      {/* 맵 컨테이너 - 정확한 좌표 매핑을 위한 정사각형 비율 */}
       <div
         className="relative"
         style={{
@@ -58,8 +58,7 @@ const Index = () => {
         <GameMap
           mapImage={selectedMap.image}
           mapSize={selectedMap.size}
-          planeStart={planeStart}
-          planeEnd={planeEnd}
+          planeRoute={{ start: planeStart, end: planeEnd }}
           target={target}
           jumpDistance={jumpDistance}
           onPlaneStartSet={setPlaneStart}

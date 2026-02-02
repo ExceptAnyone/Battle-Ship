@@ -17,14 +17,12 @@ interface UseMapZoomPanParams {
   imageSize: Size;
 }
 
-/**
- * Custom hook for managing map zoom and pan state
- */
+/** 맵 줌/팬 상태를 관리하는 훅 */
 export function useMapZoomPan({ canvasSize, imageSize }: UseMapZoomPanParams) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
 
-  // Calculate zoom level to fit image in container
+  // 이미지를 컨테이너에 맞추는 줌 레벨 계산
   const calculateFitZoom = useCallback(
     (
       containerWidth: number,
@@ -39,7 +37,7 @@ export function useMapZoomPan({ canvasSize, imageSize }: UseMapZoomPanParams) {
     []
   );
 
-  // Calculate pan to center image in container
+  // 이미지를 컨테이너 중앙에 위치시키는 팬 값 계산
   const calculateCenterPan = useCallback(
     (
       containerWidth: number,
@@ -54,48 +52,32 @@ export function useMapZoomPan({ canvasSize, imageSize }: UseMapZoomPanParams) {
     []
   );
 
-  // Update zoom and pan when container or image size changes
+  const applyFitView = useCallback(() => {
+    if (imageSize.width === 0 || imageSize.height === 0) return;
+
+    const fitZoom = calculateFitZoom(
+      canvasSize.width,
+      canvasSize.height,
+      imageSize.width,
+      imageSize.height
+    );
+    setZoom(fitZoom);
+
+    const centerPan = calculateCenterPan(
+      canvasSize.width,
+      canvasSize.height,
+      imageSize.width,
+      imageSize.height,
+      fitZoom
+    );
+    setPan(centerPan);
+  }, [canvasSize, imageSize, calculateFitZoom, calculateCenterPan]);
+
   useEffect(() => {
-    if (imageSize.width === 0 || imageSize.height === 0) return;
+    applyFitView();
+  }, [applyFitView]);
 
-    const fitZoom = calculateFitZoom(
-      canvasSize.width,
-      canvasSize.height,
-      imageSize.width,
-      imageSize.height
-    );
-    setZoom(fitZoom);
-
-    const centerPan = calculateCenterPan(
-      canvasSize.width,
-      canvasSize.height,
-      imageSize.width,
-      imageSize.height,
-      fitZoom
-    );
-    setPan(centerPan);
-  }, [canvasSize, imageSize, calculateFitZoom, calculateCenterPan]);
-
-  const resetView = useCallback(() => {
-    if (imageSize.width === 0 || imageSize.height === 0) return;
-
-    const fitZoom = calculateFitZoom(
-      canvasSize.width,
-      canvasSize.height,
-      imageSize.width,
-      imageSize.height
-    );
-    setZoom(fitZoom);
-
-    const centerPan = calculateCenterPan(
-      canvasSize.width,
-      canvasSize.height,
-      imageSize.width,
-      imageSize.height,
-      fitZoom
-    );
-    setPan(centerPan);
-  }, [canvasSize, imageSize, calculateFitZoom, calculateCenterPan]);
+  const resetView = applyFitView;
 
   const zoomIn = useCallback(() => {
     setZoom((z) => Math.min(MAX_ZOOM, z * ZOOM_BUTTON_STEP));

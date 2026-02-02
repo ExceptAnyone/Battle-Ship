@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Vec2, JumpPoint, calcJumpPoints } from "@/lib/jumpCalculator";
-
-const DEFAULT_JUMP_DISTANCE = 1250; // Default 1250m
+import { DEFAULT_JUMP_DISTANCE } from "@/constants/mapConfig";
 
 interface UseJumpCalculationParams {
   planeStart: Vec2 | null;
@@ -9,9 +8,7 @@ interface UseJumpCalculationParams {
   target: Vec2 | null;
 }
 
-/**
- * Custom hook for calculating jump points based on plane route and target
- */
+/** 비행기 경로와 목표 지점 기반으로 점프 포인트를 계산하는 훅 */
 export function useJumpCalculation({
   planeStart,
   planeEnd,
@@ -20,7 +17,7 @@ export function useJumpCalculation({
   const [jumpDistance, setJumpDistance] = useState(DEFAULT_JUMP_DISTANCE);
   const [jumpPoints, setJumpPoints] = useState<JumpPoint[]>([]);
 
-  // Recalculate jump points whenever inputs change
+  // 입력값 변경 시 점프 포인트 재계산
   useEffect(() => {
     const hasAllRequiredData = planeStart && planeEnd && target;
 

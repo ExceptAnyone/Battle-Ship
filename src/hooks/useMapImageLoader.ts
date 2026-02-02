@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, RefObject } from "react";
+import { useRef, useState, useEffect, RefObject } from "react";
 
 interface UseMapImageLoaderParams {
   mapImage: string;
@@ -10,13 +10,10 @@ interface UseMapImageLoaderParams {
   ) => void;
 }
 
-/**
- * Custom hook for loading map images and managing image state
- */
+/** 맵 이미지를 로드하고 이미지 상태를 관리하는 훅 */
 export function useMapImageLoader({
   mapImage,
-  canvasRef,
-  canvasSize,
+  
   onImageLoad,
 }: UseMapImageLoaderParams) {
   const imageRef = useRef<HTMLImageElement | null>(null);

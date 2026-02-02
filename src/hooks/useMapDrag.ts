@@ -2,10 +2,12 @@ import { useState, useCallback } from "react";
 import { useBooleanState } from "./useBooleanState";
 import { DRAG_THRESHOLD_MS } from "@/constants/mapConfig";
 
-/**
- * Custom hook for managing map drag interactions
- */
-export function useMapDrag() {
+interface UseMapDragParams {
+  onPanChange: (dx: number, dy: number) => void;
+}
+
+/** 맵 드래그 인터랙션을 관리하는 훅 */
+export function useMapDrag({ onPanChange }: UseMapDragParams) {
   const {
     value: isDragging,
     setTrue: startDragging,
@@ -24,7 +26,7 @@ export function useMapDrag() {
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent, onPanChange: (dx: number, dy: number) => void) => {
+    (e: React.MouseEvent) => {
       if (!isDragging) return;
 
       const dx = e.clientX - lastMouse.x;
@@ -33,7 +35,7 @@ export function useMapDrag() {
       onPanChange(dx, dy);
       setLastMouse({ x: e.clientX, y: e.clientY });
     },
-    [isDragging, lastMouse]
+    [isDragging, lastMouse, onPanChange]
   );
 
   const handleMouseUp = useCallback(() => {
@@ -46,7 +48,6 @@ export function useMapDrag() {
   }, [dragStartTime]);
 
   return {
-    isDragging,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

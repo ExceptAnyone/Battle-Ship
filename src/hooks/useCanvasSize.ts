@@ -5,9 +5,7 @@ interface UseCanvasSizeParams {
   canvasRef: RefObject<HTMLCanvasElement>;
 }
 
-/**
- * Custom hook for managing canvas size based on container dimensions
- */
+/** 컨테이너 크기에 따른 캔버스 크기를 관리하는 훅 */
 export function useCanvasSize({ canvasRef }: UseCanvasSizeParams) {
   const [canvasSize, setCanvasSize] = useState({
     width: DEFAULT_CANVAS_SIZE,

@@ -3,22 +3,18 @@ import erangelMapImage from "@/assets/에란겔.webp";
 import taegoMapImage from "@/assets/태이고.webp";
 import miramarMapImage from "@/assets/미라마.webp";
 
-/**
- * Map configuration interface
- */
+/** 맵 설정 인터페이스 */
 export interface MapConfig {
   id: MapNames;
   name: string;
   displayName: string;
   image: string;
-  size: number; // Map size in meters (e.g., 4000x4000, 8000x8000)
+  size: number; // 맵 크기 (미터 단위, 예: 4000x4000, 8000x8000)
 }
 
 type MapNames = "sanhok" | "erangel" | "taego" | "miramar";
 
-/**
- * Available maps configuration
- */
+/** 사용 가능한 맵 설정 */
 export const MAPS: Record<MapNames, MapConfig> = {
   sanhok: {
     id: "sanhok",
@@ -50,17 +46,11 @@ export const MAPS: Record<MapNames, MapConfig> = {
   },
 } as const;
 
-/**
- * Type for map IDs
- */
+/** 맵 ID 타입 */
 export type MapId = keyof typeof MAPS;
 
-/**
- * Array of all available maps (for iteration)
- */
+/** 전체 맵 목록 (반복용) */
 export const MAP_LIST: MapConfig[] = Object.values(MAPS);
 
-/**
- * Default map
- */
+/** 기본 맵 */
 export const DEFAULT_MAP_ID: MapId = "sanhok";

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Custom hook for registering keyboard shortcuts
+ * 키보드 단축키를 등록하는 훅
  *
- * @param shortcuts - Record of key names to callback functions
+ * @param shortcuts - 키 이름과 콜백 함수의 매핑
  * @example
  * ```tsx
  * useKeyboardShortcuts({
