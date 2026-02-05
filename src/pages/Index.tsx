@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/react";
+import { useEffect } from "react";
 import { GameMap } from "@/components/GameMap";
 import { MapSelector } from "@/components/MapSelector";
 import { useMapSelection } from "@/hooks/useMapSelection";
@@ -25,6 +27,31 @@ const Index = () => {
     planeEnd,
     target,
   });
+
+  // Sentry 컨텍스트에 게임 상태 동기화
+  useEffect(() => {
+    const gamePhase = !planeStart
+      ? "selectPlaneStart"
+      : !planeEnd
+        ? "selectPlaneEnd"
+        : !target
+          ? "selectTarget"
+          : "complete";
+
+    Sentry.setContext("gameState", {
+      selectedMap: selectedMap.id,
+      mapSize: selectedMap.size,
+      gamePhase,
+      hasPlaneStart: !!planeStart,
+      hasPlaneEnd: !!planeEnd,
+      hasTarget: !!target,
+      jumpPointsCount: jumpPoints.length,
+      jumpDistance,
+    });
+
+    Sentry.setTag("map", selectedMap.id);
+    Sentry.setTag("gamePhase", gamePhase);
+  }, [selectedMap, planeStart, planeEnd, target, jumpPoints, jumpDistance]);
 
   useKeyboardShortcuts({ r: reset });
   

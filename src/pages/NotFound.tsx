@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -5,8 +6,16 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    Sentry.captureMessage(`404: ${location.pathname}`, {
+      level: "warning",
+      tags: { feature: "navigation" },
+      extra: {
+        pathname: location.pathname,
+        search: location.search,
+        referrer: document.referrer,
+      },
+    });
+  }, [location.pathname, location.search]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">

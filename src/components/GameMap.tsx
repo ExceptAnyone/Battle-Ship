@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useRef, useEffect, useCallback } from "react";
 import { Vec2, JumpPoint } from "@/lib/jumpCalculator";
 import {
@@ -79,45 +80,64 @@ export function GameMap({
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
+    try {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
 
-    // 맵 이미지 렌더링
-    if (imageRef.current) {
-      const imgWidth = imageRef.current.naturalWidth;
-      const imgHeight = imageRef.current.naturalHeight;
-      ctx.drawImage(imageRef.current, pan.x, pan.y, imgWidth * zoom, imgHeight * zoom);
+      // 맵 이미지 렌더링
+      if (imageRef.current) {
+        const imgWidth = imageRef.current.naturalWidth;
+        const imgHeight = imageRef.current.naturalHeight;
+        ctx.drawImage(imageRef.current, pan.x, pan.y, imgWidth * zoom, imgHeight * zoom);
+      }
+
+      // 비행기 경로
+      if (planeStart && planeEnd) {
+        drawPlanePath(ctx, mapToScreen(planeStart), mapToScreen(planeEnd));
+      }
+
+      // 목표 반경 원
+      if (target && imageRef.current) {
+        const imgWidth = imageRef.current.naturalWidth;
+        const radiusInScreenPixels = (jumpDistance / mapSize) * imgWidth * zoom;
+        drawTargetCircle(ctx, mapToScreen(target), radiusInScreenPixels);
+      }
+
+      // 비행기 시작/끝 마커
+      drawPlaneMarkers(
+        ctx,
+        planeStart ? mapToScreen(planeStart) : null,
+        planeEnd ? mapToScreen(planeEnd) : null
+      );
+
+      // 점프 포인트
+      drawJumpPointsFn(
+        ctx,
+        jumpPoints.map((jp) => ({
+          screen: mapToScreen(jp.position),
+          isRecommended: jp.isRecommended,
+        }))
+      );
+
+      ctx.restore();
+    } catch (error) {
+      ctx.restore();
+      Sentry.captureException(error, {
+        tags: { feature: "canvasRender" },
+        extra: {
+          canvasWidth: canvas.width,
+          canvasHeight: canvas.height,
+          zoom,
+          panX: pan.x,
+          panY: pan.y,
+          hasImage: !!imageRef.current,
+          hasPlaneStart: !!planeStart,
+          hasPlaneEnd: !!planeEnd,
+          hasTarget: !!target,
+          jumpPointsCount: jumpPoints.length,
+        },
+      });
     }
-
-    // 비행기 경로
-    if (planeStart && planeEnd) {
-      drawPlanePath(ctx, mapToScreen(planeStart), mapToScreen(planeEnd));
-    }
-
-    // 목표 반경 원
-    if (target && imageRef.current) {
-      const imgWidth = imageRef.current.naturalWidth;
-      const radiusInScreenPixels = (jumpDistance / mapSize) * imgWidth * zoom;
-      drawTargetCircle(ctx, mapToScreen(target), radiusInScreenPixels);
-    }
-
-    // 비행기 시작/끝 마커
-    drawPlaneMarkers(
-      ctx,
-      planeStart ? mapToScreen(planeStart) : null,
-      planeEnd ? mapToScreen(planeEnd) : null
-    );
-
-    // 점프 포인트
-    drawJumpPointsFn(
-      ctx,
-      jumpPoints.map((jp) => ({
-        screen: mapToScreen(jp.position),
-        isRecommended: jp.isRecommended,
-      }))
-    );
-
-    ctx.restore();
   }, [pan, zoom, imageRef, planeStart, planeEnd, target, jumpDistance, mapSize, mapToScreen, jumpPoints]);
 
   useEffect(() => {

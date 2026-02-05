@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { useCallback, RefObject } from "react";
 import { Vec2 } from "@/lib/jumpCalculator";
 
@@ -21,7 +22,20 @@ export function useMapCoordinates({
   const screenToMap = useCallback(
     (screenX: number, screenY: number): Vec2 => {
       const rect = canvasRef.current?.getBoundingClientRect();
-      if (!rect || !imageRef.current) return { x: 0, y: 0 };
+      if (!rect || !imageRef.current) {
+        Sentry.addBreadcrumb({
+          category: "coordinate",
+          message: "screenToMap fallback: ref가 null",
+          level: "warning",
+          data: {
+            hasRect: !!rect,
+            hasImage: !!imageRef.current,
+            screenX,
+            screenY,
+          },
+        });
+        return { x: 0, y: 0 };
+      }
 
       const imgWidth = imageRef.current.naturalWidth;
       const imgHeight = imageRef.current.naturalHeight;
