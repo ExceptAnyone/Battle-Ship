@@ -26,6 +26,9 @@ dist-ssr
 # Environment variables
 .env
 
+# Sentry
+.env.sentry-build-plugin
+
 # Playwright
 /coverage
 .playwright-mcp
